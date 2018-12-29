@@ -5,20 +5,49 @@ var url = 'https://www3.bcb.gov.br/sgspub/JSP/sgsgeral/FachadaWSSGS.wsdl';
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    const p = getCotacao();
+app.get('/getcurrency/:id', (req, res) => {
+
+    const tipo = req.params.id;
+
+    const p = getCotacao(tipo);
     p
-        .then(result => console.dir(result))
+        .then(result => { 
+            const valor = getResultValue(result);
+
+            res.setHeader('Content-Type', 'application/json');
+            if(valor != 'error') {
+                console.log('Entrou2');
+                res.send(JSON.stringify({
+                    tipo: tipo,
+                    valor: valor 
+                }));
+            } else {
+                console.log('Entrou');
+                res.send(JSON.stringify({
+                    tipo: 'error'
+                })); 
+            }
+        })
         .catch(err => console.log('Error', err.message));
   });
 
-function getCotacao() {
+function getCotacao(tipo) {
 	var p = new Promise(function(resolve, reject) {
         
-        var args = {"codigoSerie ":"10813"};
+        var codigo = "10813";
+
+        if(tipo === 'USD'){
+            codigo = "10813";
+        } else if(tipo === 'EUR'){
+            codigo = "21620";
+        } else {
+            resolve('error');
+        }
+
+        var args = {"codigoSerie ":codigo};
         
         soap.createClient(url, function(err, client){
-            client.getUltimoValorXML(args, function(err, result){
+            client.getUltimoValorVO(args, function(err, result){
                     if (err) throw err;
                     resolve(result);
             });
@@ -29,6 +58,15 @@ function getCotacao() {
 
 	return p;
 
+}
+
+function getResultValue(result){
+    if(result == 'error'){
+        return result;
+    }
+    var string = JSON.stringify(result);
+    var objectValue = JSON.parse(string);
+    return result['getUltimoValorVOReturn']['ultimoValor']['valor']['$value'];
 }
 
 const port = 7070;
