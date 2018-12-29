@@ -16,13 +16,11 @@ app.get('/getcurrency/:id', (req, res) => {
 
             res.setHeader('Content-Type', 'application/json');
             if(valor != 'error') {
-                console.log('Entrou2');
                 res.send(JSON.stringify({
                     tipo: tipo,
                     valor: valor 
                 }));
             } else {
-                console.log('Entrou');
                 res.send(JSON.stringify({
                     tipo: 'error'
                 })); 
